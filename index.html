@@ -1,0 +1,308 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+    <!-- SITE TITTLE -->
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>智慧校园二手物品交易网站</title>
+
+    <!-- Bootstrap -->
+    <link href="plugins/bootstrap/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Font Awesome -->
+    <link href="plugins/font-awesome/css/font-awesome.min.css" rel="stylesheet">
+    <!-- Owl Carousel -->
+    <link href="plugins/slick-carousel/slick/slick.css" rel="stylesheet">
+    <link href="plugins/slick-carousel/slick/slick-theme.css" rel="stylesheet">
+    <!-- Fancy Box -->
+    <link href="plugins/fancybox/jquery.fancybox.pack.css" rel="stylesheet">
+    <link href="plugins/jquery-nice-select/css/nice-select.css" rel="stylesheet">
+    <link href="plugins/seiyria-bootstrap-slider/dist/css/bootstrap-slider.min.css" rel="stylesheet">
+    <!-- CUSTOM CSS -->
+    <link href="css/style.css" rel="stylesheet">
+
+    <script src="vendor/jquery.min.js"></script>
+    <script src="plugins/tether/js/tether.min.js"></script>
+    <script src="plugins/bootstrap/dist/js/popper.min.js"></script>
+    <script src="plugins/bootstrap/dist/js/bootstrap.min.js"></script>
+    <script src="plugins/seiyria-bootstrap-slider/dist/bootstrap-slider.min.js"></script>
+    <script src="plugins/slick-carousel/slick/slick.min.js"></script>
+    <script src="plugins/jquery-nice-select/js/jquery.nice-select.min.js"></script>
+    <script src="plugins/fancybox/jquery.fancybox.pack.js"></script>
+    <script src="js/scripts.js"></script>
+
+    <link rel="stylesheet" href="./vendor/element-ui/lib/theme-chalk/index.css">
+    <link rel="stylesheet" href="./css/common.css">
+    <script type="application/javascript" src="./vendor/vue/vue.js"></script>
+    <script type="application/javascript" src="./vendor/vue/vue-resource.js"></script>
+    <script type="application/javascript" src="./vendor/element-ui/lib/index.js"></script>
+    <script type="application/javascript" src="./js/common.js"></script>
+    <script type="application/javascript" src="./js/components.js"></script>
+    <style>
+        .card-title {
+            overflow: hidden;
+            text-overflow: ellipsis;
+            display: -webkit-box;
+            -webkit-line-clamp: 2;
+            -webkit-box-orient: vertical;
+            height: 43px;
+        }
+    </style>
+</head>
+
+<body class="body-wrapper">
+<div id="app" v-cloak>
+    <nav-header page="index"></nav-header>
+    <section class="hero-area bg-1 text-center overly">
+        <!-- Container Start -->
+        <div class="container">
+            <div class="row">
+                <div class="col-md-12">
+                    <!-- Header Contetnt -->
+                    <div class="content-block">
+                        <br/>
+                        <h1>智慧校园二手物品交易网站</h1>
+                        <p>毕业季的大学生可以快速地卖出自己带不走的二手物品 <br> 需要购物的学生也可以通过该网站便利的找到满足需求、价格低廉的物品</p>
+                        <br/>
+                        <br/>
+                    </div>
+                    <div class="advance-search">
+                        <div class="row">
+                            <div class="col-lg-12 col-md-12">
+                                <div class="block d-flex">
+                                    <input type="text" class="form-control mb-2 mr-sm-2 mb-sm-0" v-model="keywords"
+                                           placeholder="搜索">
+                                    <button class="btn btn-main" @click="onClickSearch">搜索</button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section class="popular-deals section bg-gray">
+        <div class="container">
+            <div class="row">
+                <div class="col-md-12">
+                    <div class="section-title">
+                        <h2>最新上架</h2>
+                        <p>实时呈现最新上架的物品</p>
+                    </div>
+                </div>
+            </div>
+            <div class="row">
+                <div v-for="goods in goodsList" class="col-sm-12 col-lg-3">
+                    <div class="product-item bg-light">
+                        <div class="card">
+                            <div class="thumb-content">
+                                <a :href="getGoodsDetailUrl(goods)">
+                                    <img class="card-img-top img-fluid" :src="goods.pic_url">
+                                </a>
+                            </div>
+                            <div class="card-body">
+                                <h4 class="card-title"><a :href="getGoodsDetailUrl(goods)">{{goods.title}}</a></h4>
+                                <ul class="list-inline product-meta">
+                                    <li class="list-inline-item">
+                                        <a :href="getGoodsDetailUrl(goods)"><i class="fa fa-folder-open-o"></i>{{goods.full_category_name}}</a>
+                                    </li>
+                                    <li class="list-inline-item">
+                                        <a :href="getGoodsDetailUrl(goods)"><i class="fa fa-calendar"></i>{{goods.created_at}}</a>
+                                    </li>
+                                </ul>
+                                <p class="card-text">¥ {{goods.price}}</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section class="popular-deals section bg-gray" style="padding-top: 0">
+        <div class="container">
+            <div class="row">
+                <div class="col-md-12">
+                    <div class="section-title">
+                        <h2>最近浏览</h2>
+                        <p>最近浏览的物品</p>
+                    </div>
+                </div>
+            </div>
+            <div class="row">
+                <div v-if="!currentUser.id" class="col-lg-12" style="text-align: center">
+                    <button class="btn btn-main" @click="onClickLogin">登录后查看</button>
+                </div>
+                <template v-if="currentUser.id">
+                    <div v-if="!browseGoodsList.length" class="col-lg-12" style="text-align: center">
+                        <p>暂无浏览记录</p>
+                    </div>
+                    <div v-if="browseGoodsList.length" v-for="log in browseGoodsList" class="col-sm-12 col-lg-3">
+                        <div class="product-item bg-light">
+                            <div class="card">
+                                <div class="thumb-content">
+                                    <a :href="getGoodsDetailUrl(log.goods)">
+                                        <img class="card-img-top img-fluid" :src="log.goods.pic_url">
+                                    </a>
+                                </div>
+                                <div class="card-body">
+                                    <h4 class="card-title"><a
+                                            :href="getGoodsDetailUrl(log.goods)">{{log.goods.title}}</a></h4>
+                                    <ul class="list-inline product-meta">
+                                        <li class="list-inline-item">
+                                            <a :href="getGoodsDetailUrl(log.goods)"><i class="fa fa-folder-open-o"></i>{{log.goods.full_category_name}}</a>
+                                        </li>
+                                        <li class="list-inline-item">
+                                            <a :href="getGoodsDetailUrl(log.goods)"><i class="fa fa-calendar"></i>{{log.goods.created_at}}</a>
+                                        </li>
+                                    </ul>
+                                    <p class="card-text">¥ {{log.goods.price}}</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </template>
+            </div>
+        </div>
+    </section>
+
+    <section class=" section">
+        <div class="container">
+            <div class="row">
+                <div class="col-12">
+                    <div class="section-title">
+                        <h2>所有类别</h2>
+                        <p></p>
+                    </div>
+                    <div class="row">
+                        <div v-for="category in categories"
+                             class="col-lg-3 offset-lg-0 col-md-5 offset-md-1 col-sm-6 col-6">
+                            <div class="category-block">
+                                <div class="header">
+                                    <i class="fa" :class="category.classes"></i>
+                                    <h4>{{category.name}}</h4>
+                                </div>
+                                <ul class="category-list">
+                                    <li v-for="child in category.children">
+                                        <a :href="getSearchUrl(category, child)">{{child.name}}
+                                            <span>{{child.amount}}</span></a>
+                                    </li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+    <page-footer></page-footer>
+</div>
+</body>
+<script type="application/javascript">
+    let vueApp = null;
+    vueApp = new Vue({
+        el: '#app',
+        data: function () {
+            return {
+                socket: null,
+                keywords: '',
+                goodsList: [],
+                categories: [],
+                browseGoodsList: [],
+                currentUser: {},
+            }
+        },
+        methods: {
+            initData() {
+                this.currentUser = _getStorageObj('user', {});
+                if (this.currentUser.id) {
+                    let self = this;
+                    let params = {
+                        page_index: 1,
+                        page_size: 4
+                    };
+                    _api('get', 'browse-logs', params, function (res) {
+                        if (res.success) {
+                            self.browseGoodsList = res.data.list;
+                        }
+                    });
+                }
+            },
+            getGoods() {
+                let self = this;
+                let params = {
+                    page_size: 4,
+                    page_index: 1
+                };
+                _api('get', 'goods/many', params, function (res) {
+                    if (res.success) {
+                        self.goodsList = res.data.list;
+                    }
+                });
+            },
+            getCategories: function () {
+                let self = this;
+                _api('get', 'categories/all', {}, function (res) {
+                    if (res.success) {
+                        self.categories = [];
+                        for (let i = 0; i < res.data.length; i++) {
+                            let item = res.data[i];
+                            let classes = {};
+                            classes['icon-bg-' + (i % 8 + 1)] = true;
+                            if (!item.icon_class.length) {
+                                classes['fa-home'] = true;
+                            }
+                            item.classes = classes;
+                            self.categories.push(item);
+                        }
+                    }
+                })
+            },
+            getSearchUrl(c1, c2) {
+                return 'list.html?c1=' + c1.id + '&c2=' + c2.id;
+            },
+            getGoodsDetailUrl(goods) {
+                return 'goods-detail.html?id=' + goods.id;
+            },
+            onClickSearch() {
+                let location = './list.html?keywords=' + this.keywords;
+                _relocation(location);
+            },
+            onClickLogin() {
+                _relocation('login.html');
+            },
+            connectWebsocketServer() {
+                console.log('[ws] Connecting server...');
+                let server = _CONFIG.websocket;
+
+                this.socket = new WebSocket(server);
+                this.socket.onopen = function () {
+                    console.log('[ws] Websocket connected');
+                };
+                this.socket.onmessage = function (msg) {
+                    let data = JSON.parse(msg.data);
+                    console.log("[ws] onMessage", data);
+                    vueApp.goodsList = data;
+                };
+                this.socket.onclose = function () {
+                    console.log('[ws] Connection closed');
+                    setTimeout(function () {
+                        console.log('[ws] Reconnecting...');
+                        vueApp.connectWebsocketServer();
+                    }, 1000);
+                }
+            }
+        },
+        mounted: function () {
+            this.initData();
+            this.getCategories();
+            this.getGoods();
+            this.connectWebsocketServer();
+        }
+    });
+</script>
+</html>
+
+
+

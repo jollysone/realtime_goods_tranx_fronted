@@ -1,0 +1,239 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+    <!-- SITE TITTLE -->
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>智慧校园二手物品交易网站</title>
+
+    <!-- Bootstrap -->
+    <link href="plugins/bootstrap/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Font Awesome -->
+    <link href="plugins/font-awesome/css/font-awesome.min.css" rel="stylesheet">
+    <!-- Owl Carousel -->
+    <link href="plugins/slick-carousel/slick/slick.css" rel="stylesheet">
+    <link href="plugins/slick-carousel/slick/slick-theme.css" rel="stylesheet">
+    <!-- Fancy Box -->
+    <link href="plugins/fancybox/jquery.fancybox.pack.css" rel="stylesheet">
+    <link href="plugins/jquery-nice-select/css/nice-select.css" rel="stylesheet">
+    <link href="plugins/seiyria-bootstrap-slider/dist/css/bootstrap-slider.min.css" rel="stylesheet">
+    <!-- CUSTOM CSS -->
+    <link href="css/style.css" rel="stylesheet">
+
+    <script src="vendor/jquery.min.js"></script>
+    <script src="plugins/tether/js/tether.min.js"></script>
+    <script src="plugins/bootstrap/dist/js/popper.min.js"></script>
+    <script src="plugins/bootstrap/dist/js/bootstrap.min.js"></script>
+    <script src="plugins/seiyria-bootstrap-slider/dist/bootstrap-slider.min.js"></script>
+    <script src="plugins/slick-carousel/slick/slick.min.js"></script>
+    <script src="plugins/jquery-nice-select/js/jquery.nice-select.min.js"></script>
+    <script src="plugins/fancybox/jquery.fancybox.pack.js"></script>
+    <script src="js/scripts.js"></script>
+
+    <link rel="stylesheet" href="./vendor/element-ui/lib/theme-chalk/index.css">
+    <link rel="stylesheet" href="./css/common.css">
+    <script type="application/javascript" src="./vendor/vue/vue.js"></script>
+    <script type="application/javascript" src="./vendor/vue/vue-resource.js"></script>
+    <script type="application/javascript" src="./vendor/element-ui/lib/index.js"></script>
+    <script type="application/javascript" src="./js/common.js"></script>
+    <script type="application/javascript" src="./js/components.js"></script>
+
+    <script type="text/javascript" src="./ueditor/ueditor.config.default.js"></script>
+    <script type="text/javascript" src="./ueditor/ueditor.all.js"></script>
+    <script type="text/javascript" src="./ueditor/lang/zh-cn/zh-cn.js"></script>
+    <style>
+        .disabled .el-upload--picture-card {
+            display: none;
+        }
+    </style>
+</head>
+
+<body class="body-wrapper">
+<div id="app" v-cloak>
+    <nav-header page="login"></nav-header>
+    <section class="user-profile section">
+        <div class="container">
+            <div class="row">
+                <div class="col-md-8 el-col-md-offset-4">
+                    <div class="widget change-email mb-0">
+                        <h3 class="widget-header user">
+                            订单详情
+                        </h3>
+                        <el-form v-if="order.goods" :model="order" status-icon :rules="rules" ref="order"
+                                 label-width="80px">
+                            <el-form-item label="订单编号">
+                                {{order.sn}}
+                            </el-form-item>
+                            <el-form-item label="商品名称">
+                                {{order.goods.title}}
+                            </el-form-item>
+                            <el-form-item label="商品图片">
+                                <img :src="order.goods.pic_url" style="width: 150px">
+                            </el-form-item>
+                            <el-form-item label="订单金额">
+                                {{order.price}}
+                            </el-form-item>
+                            <template v-if="currentUser.id !== order.buyer.id">
+                                <el-form-item label="买家信息">
+                                    {{order.buyer.nick}} ({{order.buyer.phone}})
+                                </el-form-item>
+                                <el-form-item label="买家信用">
+                                    {{order.buyer.credit.buy_score}}
+                                </el-form-item>
+                            </template>
+                            <template v-if="currentUser.id !== order.seller.id">
+                                <el-form-item label="卖家信息">
+                                    {{order.seller.nick}} ({{order.seller.phone}})
+                                </el-form-item>
+                                <el-form-item label="卖家信用">
+                                    {{order.seller.credit.sell_score}}
+                                </el-form-item>
+                            </template>
+                            <el-form-item label="订单状态">
+                                {{order.status|orderStatus}}
+                            </el-form-item>
+                            <el-form-item label="下单时间">
+                                {{order.created_at}}
+                            </el-form-item>
+                            <template v-if="order.status === 1">
+                                <el-form-item label="交易截止">
+                                    {{order.will_timeout_at}}
+                                </el-form-item>
+                                <el-form-item label="订单操作">
+                                    <el-popover
+                                            placement="bottom"
+                                            width="160"
+                                            v-model="doneVisible">
+                                        <p style="text-align: center">确定将订单设置为完成状态吗？</p>
+                                        <div style="text-align: right; margin-top: 10px">
+                                            <el-button size="mini" type="text"
+                                                       @click="doneVisible = false">
+                                                再想想
+                                            </el-button>
+                                            <el-button type="success" size="mini"
+                                                       @click="(doneVisible = false) || onClickDone()">
+                                                确定
+                                            </el-button>
+                                        </div>
+                                        <el-button slot="reference" type="success"
+                                                   v-if="currentUser.id !== order.buyer.id">完成交易
+                                        </el-button>
+                                    </el-popover>
+                                    <el-popover
+                                            placement="bottom"
+                                            width="160"
+                                            v-model="extendVisible">
+                                        <p style="text-align: center">确定将交易截止时间延长 30 分钟吗？</p>
+                                        <div style="text-align: right; margin-top: 10px">
+                                            <el-button size="mini" type="text"
+                                                       @click="extendVisible = false">
+                                                再想想
+                                            </el-button>
+                                            <el-button type="primary" size="mini"
+                                                       @click="(extendVisible = false) || onClickExtendTimeout()">
+                                                确定
+                                            </el-button>
+                                        </div>
+                                        <el-button slot="reference" type="primary"
+                                                   v-if="currentUser.id !== order.buyer.id">延长交易
+                                        </el-button>
+                                    </el-popover>
+                                    <el-popover
+                                            placement="bottom"
+                                            width="160"
+                                            v-model="cancelVisible">
+                                        <p style="text-align: center">确定取消此订单吗？</p>
+                                        <div style="text-align: right; margin-top: 10px">
+                                            <el-button size="mini" type="text"
+                                                       @click="cancelVisible = false">
+                                                再想想
+                                            </el-button>
+                                            <el-button type="danger" size="mini"
+                                                       @click="(cancelVisible = false) || onClickCancel()">
+                                                确定
+                                            </el-button>
+                                        </div>
+                                        <el-button slot="reference" type="danger">取消订单</el-button>
+                                    </el-popover>
+
+                                </el-form-item>
+                            </template>
+                        </el-form>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+    <page-footer></page-footer>
+</div>
+</body>
+<script type="application/javascript">
+    let vueApp = null;
+    vueApp = new Vue({
+        el: '#app',
+        data: function () {
+            return {
+                extendVisible: false,
+                cancelVisible: false,
+                doneVisible: false,
+                currentUser: {},
+                order: {},
+                rules: {},
+            }
+        },
+        filters: {
+            orderStatus(status) {
+                return ['', '等待线下确认', '完成', '已取消', '超时未确认'][status];
+            }
+        },
+        methods: {
+            getOrderDetail() {
+                let self = this;
+                _api('get', 'order', {sn: this.order.sn}, function (res) {
+                    if (res.success) {
+                        self.order = res.data;
+                    } else {
+                        self.$message.error(res.message);
+                    }
+                })
+            },
+            onClickExtendTimeout() {
+                let params = {
+                    sn: this.order.sn,
+                    minutes: 30
+                };
+                _api('put', 'order/extend-timeout', params, this.onApiPutActionResult);
+            },
+            onClickDone() {
+                let params = {
+                    sn: this.order.sn
+                };
+                _api('put', 'order/done', params, this.onApiPutActionResult);
+            },
+            onClickCancel() {
+                let params = {
+                    sn: this.order.sn
+                };
+                _api('put', 'order/cancel', params, this.onApiPutActionResult);
+            },
+            onApiPutActionResult(res) {
+                if (res.success) {
+                    this.$message.success('操作成功');
+                } else {
+                    this.$message.error(res.message);
+                }
+                this.getOrderDetail();
+            }
+        },
+        mounted: function () {
+            this.currentUser = _getStorageObj('user', {});
+            let sn = _getUrlParam('sn', null);
+            if (sn) {
+                this.order.sn = sn;
+                this.getOrderDetail();
+            }
+        }
+    });
+</script>
+</html>

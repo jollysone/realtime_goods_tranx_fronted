@@ -1,0 +1,180 @@
+<!DOCTYPE html>
+<html lang="ch">
+<head>
+
+    <!-- SITE TITTLE -->
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>智慧校园二手物品交易网站</title>
+
+    <!-- Bootstrap -->
+    <link href="plugins/bootstrap/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Font Awesome -->
+    <link href="plugins/font-awesome/css/font-awesome.min.css" rel="stylesheet">
+    <!-- Owl Carousel -->
+    <link href="plugins/slick-carousel/slick/slick.css" rel="stylesheet">
+    <link href="plugins/slick-carousel/slick/slick-theme.css" rel="stylesheet">
+    <!-- Fancy Box -->
+    <link href="plugins/fancybox/jquery.fancybox.pack.css" rel="stylesheet">
+    <link href="plugins/jquery-nice-select/css/nice-select.css" rel="stylesheet">
+    <link href="plugins/seiyria-bootstrap-slider/dist/css/bootstrap-slider.min.css" rel="stylesheet">
+    <!-- CUSTOM CSS -->
+    <link href="css/style.css" rel="stylesheet">
+
+    <script src="vendor/jquery.min.js"></script>
+    <script src="plugins/tether/js/tether.min.js"></script>
+    <script src="plugins/bootstrap/dist/js/popper.min.js"></script>
+    <script src="plugins/bootstrap/dist/js/bootstrap.min.js"></script>
+    <script src="plugins/seiyria-bootstrap-slider/dist/bootstrap-slider.min.js"></script>
+    <script src="plugins/slick-carousel/slick/slick.min.js"></script>
+    <script src="plugins/jquery-nice-select/js/jquery.nice-select.min.js"></script>
+    <script src="plugins/fancybox/jquery.fancybox.pack.js"></script>
+    <script src="js/scripts.js"></script>
+
+    <link rel="stylesheet" href="./vendor/element-ui/lib/theme-chalk/index.css">
+    <link rel="stylesheet" href="./css/common.css">
+    <script type="application/javascript" src="./vendor/vue/vue.js"></script>
+    <script type="application/javascript" src="./vendor/vue/vue-resource.js"></script>
+    <script type="application/javascript" src="./vendor/element-ui/lib/index.js"></script>
+    <script type="application/javascript" src="./js/common.js"></script>
+    <script type="application/javascript" src="./js/components.js"></script>
+</head>
+
+<body class="body-wrapper">
+<div id="app" v-cloak>
+    <nav-header page="user-profile"></nav-header>
+    <section class="dashboard section">
+        <div class="container">
+            <div class="row">
+                <user-sidebar page="user-profile"></user-sidebar>
+                <div class="col-md-10 offset-md-1 col-lg-8 offset-lg-0">
+                    <div class="widget dashboard-container my-adslist">
+                        <h3 class="widget-header">我的资料</h3>
+                        <el-form v-if="loaded" :model="profileForm" status-icon :rules="rules" ref="profileForm"
+                                 label-width="80px">
+                            <el-form-item label="学号" prop="number">
+                                <el-input type="text" v-model="profileForm.number"></el-input>
+                            </el-form-item>
+                            <el-form-item label="手机" prop="phone">
+                                <el-input type="text" v-model="profileForm.phone"></el-input>
+                            </el-form-item>
+                            <el-form-item label="真实姓名" prop="true_name">
+                                <el-input type="text" v-model="profileForm.true_name"></el-input>
+                            </el-form-item>
+                            <el-form-item label="昵称" prop="nick">
+                                <el-input type="text" v-model="profileForm.nick"></el-input>
+                            </el-form-item>
+                            <el-form-item label="密码" prop="password">
+                                <el-input type="password" v-model="profileForm.password"></el-input>
+                                <span>如不修改，请留空</span>
+                            </el-form-item>
+                            <el-form-item label="重复密码" prop="password_repeat">
+                                <el-input type="password" v-model="profileForm.password_repeat"></el-input>
+                            </el-form-item>
+                            <el-form-item>
+                                <el-button type="primary" @click="onClickSubmit">提交</el-button>
+                            </el-form-item>
+                        </el-form>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+    <page-footer></page-footer>
+</div>
+</body>
+<script>
+    let vueApp = null;
+    vueApp = new Vue({
+        el: '#app',
+        data: function () {
+            return {
+                loaded: false,
+                profileForm: {
+                    number: '',
+                    true_name: '',
+                    phone: '',
+                    nick: '',
+                    password: '',
+                    password_repeat: ''
+                },
+                rules: {
+                    number: [{required: true, message: '请输入学号', trigger: 'blur'}],
+                    true_name: [{required: true, message: '请输入真实姓名', trigger: 'blur'}],
+                    phone: [{required: true, message: '请输入手机号', trigger: 'blur'}],
+                    nick: [{required: true, message: '请输入昵称', trigger: 'blur'}],
+                    password: [{
+                        validator: (rule, value, callback) => {
+                            if (value !== '' && value.length < 6) {
+                                callback(new Error('密码至少6个字符'));
+                            }
+                            vueApp.$refs.profileForm.validateField('password_repeat');
+                            callback();
+                        }, trigger: 'change'
+                    }],
+                    password_repeat: [{
+                        validator: (rule, value, callback) => {
+                            if (vueApp.profileForm.password) {
+                                if (value.length === 0) {
+                                    callback(new Error('请重复输入密码'));
+                                } else if (value !== vueApp.profileForm.password) {
+                                    callback(new Error('两次输入的密码不一致'));
+                                }
+                                callback();
+                            }
+                            callback();
+                        }, trigger: 'change'
+                    }]
+                }
+            }
+        },
+        methods: {
+            initData() {
+                let user = _getStorageObj('user');
+                if (user) {
+                    this.profileForm = {
+                        ...this.profileForm,
+                        number: user.number,
+                        true_name: user.true_name,
+                        phone: user.phone,
+                        nick: user.nick,
+                    };
+                }
+                this.loaded = true;
+            },
+            onClickSubmit() {
+                let self = this;
+                this.$refs['profileForm'].validate((valid) => {
+                    if (valid) {
+                        let form = this.profileForm;
+                        _api('put', 'user/profile', form, function (res) {
+                            if (res.success) {
+                                if (self.profileForm.password) {
+                                    self.$message.success('修改成功，请重新登录');
+                                    _remove('token');
+                                    _remove('user');
+                                    setTimeout(function () {
+                                        _relocation('login.html');
+                                    }, 1000);
+                                } else {
+                                    self.$message.success('修改成功');
+                                    _save('user', res.data);
+                                    setTimeout(function () {
+                                        _relocation('user-profile.html');
+                                    }, 1000);
+                                }
+                            } else {
+                                self.$message.error(res.message);
+                            }
+                        })
+                    }
+                });
+            }
+        },
+        mounted: function () {
+            this.initData();
+        }
+    });
+</script>
+</html>

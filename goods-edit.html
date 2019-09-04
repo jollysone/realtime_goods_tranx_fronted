@@ -1,0 +1,256 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+    <!-- SITE TITTLE -->
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>智慧校园二手物品交易网站</title>
+
+    <!-- Bootstrap -->
+    <link href="plugins/bootstrap/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Font Awesome -->
+    <link href="plugins/font-awesome/css/font-awesome.min.css" rel="stylesheet">
+    <!-- Owl Carousel -->
+    <link href="plugins/slick-carousel/slick/slick.css" rel="stylesheet">
+    <link href="plugins/slick-carousel/slick/slick-theme.css" rel="stylesheet">
+    <!-- Fancy Box -->
+    <link href="plugins/fancybox/jquery.fancybox.pack.css" rel="stylesheet">
+    <link href="plugins/jquery-nice-select/css/nice-select.css" rel="stylesheet">
+    <link href="plugins/seiyria-bootstrap-slider/dist/css/bootstrap-slider.min.css" rel="stylesheet">
+    <!-- CUSTOM CSS -->
+    <link href="css/style.css" rel="stylesheet">
+
+    <script src="vendor/jquery.min.js"></script>
+    <script src="plugins/tether/js/tether.min.js"></script>
+    <script src="plugins/bootstrap/dist/js/popper.min.js"></script>
+    <script src="plugins/bootstrap/dist/js/bootstrap.min.js"></script>
+    <script src="plugins/seiyria-bootstrap-slider/dist/bootstrap-slider.min.js"></script>
+    <script src="plugins/slick-carousel/slick/slick.min.js"></script>
+    <script src="plugins/jquery-nice-select/js/jquery.nice-select.min.js"></script>
+    <script src="plugins/fancybox/jquery.fancybox.pack.js"></script>
+    <script src="js/scripts.js"></script>
+
+    <link rel="stylesheet" href="./vendor/element-ui/lib/theme-chalk/index.css">
+    <link rel="stylesheet" href="./css/common.css">
+    <script type="application/javascript" src="./vendor/vue/vue.js"></script>
+    <script type="application/javascript" src="./vendor/vue/vue-resource.js"></script>
+    <script type="application/javascript" src="./vendor/element-ui/lib/index.js"></script>
+    <script type="application/javascript" src="./js/common.js"></script>
+    <script type="application/javascript" src="./js/components.js"></script>
+
+    <script type="text/javascript" src="./ueditor/ueditor.config.default.js"></script>
+    <script type="text/javascript" src="./ueditor/ueditor.all.js"></script>
+    <script type="text/javascript" src="./ueditor/lang/zh-cn/zh-cn.js"></script>
+    <style>
+        .disabled .el-upload--picture-card {
+            display: none;
+        }
+    </style>
+</head>
+
+<body class="body-wrapper">
+<div id="app" v-cloak>
+    <nav-header page="login"></nav-header>
+    <section class="user-profile section">
+        <div class="container">
+            <div class="row">
+                <div class="col-md-8 el-col-md-offset-4">
+                    <div class="widget change-email mb-0">
+                        <h3 class="widget-header user">
+                            发布商品
+                        </h3>
+                        <el-form :model="goodsForm" status-icon :rules="rules" ref="goodsForm" label-width="80px">
+                            <el-form-item label="标题" prop="title">
+                                <el-input type="text" v-model="goodsForm.title"
+                                          :disabled="goodsForm.sell_status!==1"></el-input>
+                            </el-form-item>
+                            <el-form-item label="价格" prop="price">
+                                <el-col :span="8">
+                                    <el-input type="number" v-model="goodsForm.price"
+                                              :disabled="goodsForm.sell_status!==1"></el-input>
+                                </el-col>
+                            </el-form-item>
+                            <el-form-item label="类别" prop="category_id">
+                                <el-cascader
+                                        :options="categoryOptions" :props="{label:'name', value:'id'}"
+                                        v-model="goodsForm.category_id" :disabled="goodsForm.sell_status!==1">
+                                </el-cascader>
+                            </el-form-item>
+                            <el-form-item label="图片" prop="pic_id">
+                                <el-upload
+                                        :class="{disabled:uploadDisabled}"
+                                        :action="uploadConfig.apiUrl"
+                                        :headers="uploadConfig.headers"
+                                        :data="uploadConfig.data"
+                                        :multiple="false"
+                                        list-type="picture-card"
+                                        :limit="1"
+                                        :file-list="fileList"
+                                        :on-preview="handlePictureCardPreview"
+                                        :on-remove="handleUploadRemove"
+                                        :on-change="handleUploadChange"
+                                        :disabled="goodsForm.sell_status!==1">
+                                    <i class="el-icon-plus"></i>
+                                </el-upload>
+                                <el-dialog :visible.sync="dialogVisible">
+                                    <img width="100%" :src="dialogImageUrl" alt="">
+                                </el-dialog>
+                            </el-form-item>
+                            <el-form-item label="商品描述" prop="description">
+                                <script id="ue_content" type="text/plain">
+                                </script>
+                            </el-form-item>
+                            <el-form-item>
+                                <el-button type="primary" @click="onClickSubmit" :disabled="goodsForm.sell_status!==1">
+                                    提交
+                                </el-button>
+                            </el-form-item>
+                        </el-form>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+    <page-footer></page-footer>
+</div>
+</body>
+<script type="application/javascript">
+    let vueApp = null;
+    vueApp = new Vue({
+        el: '#app',
+        data: function () {
+            return {
+                fileList: [],
+                uploadConfig: {
+                    apiUrl: _CONFIG.api + 'file',
+                    headers: {
+                        'Auth-Token': _getStorageStr('token')
+                    },
+                    data: {
+                        type: 'goods'
+                    }
+                },
+                dialogImageUrl: '',
+                dialogVisible: false,
+                editors: {},
+                categoryOptions: [],
+                goodsForm: {
+                    number: '',
+                    title: '',
+                    price: '',
+                    status: '',
+                    category_id: [],
+                    pic_id: '',
+                    description: '',
+                    sell_status:1
+                },
+                rules: {
+                    title: [{required: true, message: '请输入标题', trigger: 'blur'}],
+                    price: [{required: true, message: '请输入价格', trigger: 'blur'}],
+                    category_id: [{required: true, message: '请选择分类', trigger: 'change'}],
+                    pic_id: [{required: true, message: '请上传图片', trigger: 'change'}],
+                    description: [{required: true, message: '请输入商品描述', trigger: 'blur'}],
+                },
+            }
+        },
+        computed: {
+            uploadDisabled: function () {
+                return this.fileList.length > 0
+            },
+        },
+        methods: {
+            getCategories() {
+                let self = this;
+                _api('get', 'categories/all', {}, function (res) {
+                    if (res.success) {
+                        self.categoryOptions = res.data;
+                    }
+                })
+            },
+            getGoodsDetail() {
+                let self = this;
+                _api('get', 'goods', {id: this.goodsForm.id}, function (res) {
+                    if (res.success) {
+                        let data = res.data;
+                        data.category_id = data.full_category_id;
+                        self.goodsForm = data;
+                        self.editors['ue_content'].setContent(data.description);
+                        self.fileList.push({
+                            url: data.pic_url
+                        });
+                    } else {
+                        self.$message.error(res.message);
+                    }
+                })
+            },
+            onClickSubmit() {
+                let self = this;
+                this.$refs['goodsForm'].validate((valid) => {
+                    if (valid) {
+                        let form = {...this.goodsForm};
+                        form.category_id = form.category_id[1];
+                        _api(form.id ? 'put' : 'post', 'goods', form, function (res) {
+                            if (res.success) {
+                                self.$message.success('提交成功');
+                                setTimeout(function () {
+                                    _relocation('user-goods.html');
+                                }, 1000);
+                            } else {
+                                self.$message.error(res.message);
+                            }
+                        })
+                    }
+                });
+            },
+            renderUEditor(editorName, initialValue) {
+                if (this.editors[editorName]) {
+                    return;
+                }
+                window.UE.delEditor(editorName);
+                const uEditor = window.UE.getEditor(editorName, uEditorConfig);
+
+                uEditor.ready(() => {
+                    uEditor.setContent(initialValue ? initialValue : '');
+                    uEditor.container.style.lineHeight = 'initial';
+                });
+
+                uEditor.addListener('contentChange', () => {
+                    vueApp.goodsForm.description = uEditor.getContent();
+                });
+
+                this.editors[editorName] = uEditor;
+            },
+            handleUploadRemove(file, fileList) {
+                this.fileList = [];
+                this.goodsForm.pic_id = '';
+            },
+            handleUploadChange(file, fileList) {
+                console.log(file, fileList);
+                this.fileList = fileList;
+                if (fileList.length) {
+                    let file = fileList[0];
+                    if (file.response && file.response.success) {
+                        this.goodsForm.pic_id = file.response.data.id;
+                    }
+                } else {
+                    this.goodsForm.pic_id = '';
+                }
+            },
+            handlePictureCardPreview(file) {
+                this.dialogImageUrl = file.url;
+                this.dialogVisible = true;
+            }
+        },
+        mounted: function () {
+            this.renderUEditor('ue_content', '');
+            this.getCategories();
+            let id = _getUrlParam('id', null);
+            if (id) {
+                this.goodsForm.id = id;
+                this.getGoodsDetail();
+            }
+        }
+    });
+</script>
+</html>

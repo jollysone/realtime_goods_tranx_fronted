@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+    <!-- SITE TITTLE -->
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>智慧校园二手物品交易网站</title>
+
+    <!-- Bootstrap -->
+    <link href="plugins/bootstrap/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Font Awesome -->
+    <link href="plugins/font-awesome/css/font-awesome.min.css" rel="stylesheet">
+    <!-- Owl Carousel -->
+    <link href="plugins/slick-carousel/slick/slick.css" rel="stylesheet">
+    <link href="plugins/slick-carousel/slick/slick-theme.css" rel="stylesheet">
+    <!-- Fancy Box -->
+    <link href="plugins/fancybox/jquery.fancybox.pack.css" rel="stylesheet">
+    <link href="plugins/jquery-nice-select/css/nice-select.css" rel="stylesheet">
+    <link href="plugins/seiyria-bootstrap-slider/dist/css/bootstrap-slider.min.css" rel="stylesheet">
+    <!-- CUSTOM CSS -->
+    <link href="css/style.css" rel="stylesheet">
+
+    <script src="vendor/jquery.min.js"></script>
+    <script src="plugins/tether/js/tether.min.js"></script>
+    <script src="plugins/bootstrap/dist/js/popper.min.js"></script>
+    <script src="plugins/bootstrap/dist/js/bootstrap.min.js"></script>
+    <script src="plugins/seiyria-bootstrap-slider/dist/bootstrap-slider.min.js"></script>
+    <script src="plugins/slick-carousel/slick/slick.min.js"></script>
+    <script src="plugins/jquery-nice-select/js/jquery.nice-select.min.js"></script>
+    <script src="plugins/fancybox/jquery.fancybox.pack.js"></script>
+    <script src="js/scripts.js"></script>
+
+    <link rel="stylesheet" href="./vendor/element-ui/lib/theme-chalk/index.css">
+    <link rel="stylesheet" href="./css/common.css">
+    <script type="application/javascript" src="./vendor/vue/vue.js"></script>
+    <script type="application/javascript" src="./vendor/vue/vue-resource.js"></script>
+    <script type="application/javascript" src="./vendor/element-ui/lib/index.js"></script>
+    <script type="application/javascript" src="./js/common.js"></script>
+    <script type="application/javascript" src="./js/components.js"></script>
+</head>
+
+<body class="body-wrapper">
+<div id="app" v-cloak>
+    <nav-header page="login"></nav-header>
+    <section class="user-profile section">
+        <div class="container">
+            <div class="row">
+                <div class="col-md-8 el-col-md-offset-4">
+                    <div class="widget change-email mb-0">
+                        <h3 class="widget-header user">登录</h3>
+                        <el-form :model="loginForm" status-icon :rules="rules" ref="loginForm" label-width="80px">
+                            <el-form-item label="账号" prop="phone">
+                                <el-input type="text" v-model="loginForm.phone" autocomplete="off"
+                                          placeholder="请输入账号"></el-input>
+                            </el-form-item>
+                            <el-form-item label="密码" prop="password">
+                                <el-input type="password" v-model="loginForm.password" autocomplete="off"
+                                          placeholder="请输入密码"></el-input>
+                                <span style="float: right"><a href="retrieve-pwd.html">找回密码</a></span>
+                            </el-form-item>
+                            <el-form-item>
+                                <el-button type="primary" @click="onClickLogin">登录</el-button>
+                                <span style="float: right">没有账号？<a href="register.html">立即注册</a></span>
+                            </el-form-item>
+                        </el-form>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+    <page-footer></page-footer>
+</div>
+</body>
+<script type="application/javascript">
+    let vueApp = new Vue({
+        el: '#app',
+        data: function () {
+            return {
+                loginForm: {
+                    phone: '',
+                    password: '',
+                    app_type: 1
+                },
+                rules: {
+                    phone: [
+                        {required: true, message: '请输入账号', trigger: 'blur'},
+                    ],
+                    password: [
+                        {required: true, message: '请输入密码', trigger: 'blur'},
+                    ],
+                }
+            }
+        },
+        methods: {
+            onClickLogin() {
+                let self = this;
+                this.$refs['loginForm'].validate((valid) => {
+                    if (valid) {
+                        _api('post', 'token/by-pwd', this.loginForm, function (res) {
+                            if (res.success) {
+                                _save('token', res.data.token);
+                                _relocation('./index.html');
+                            } else {
+                                self.$message.error(res.message);
+                            }
+                        });
+                    }
+                });
+            }
+        },
+        mounted: function () {
+
+        }
+    });
+</script>
+</html>

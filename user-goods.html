@@ -1,0 +1,196 @@
+<!DOCTYPE html>
+<html lang="ch">
+<head>
+
+    <!-- SITE TITTLE -->
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>智慧校园二手物品交易网站</title>
+
+    <!-- Bootstrap -->
+    <link href="plugins/bootstrap/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Font Awesome -->
+    <link href="plugins/font-awesome/css/font-awesome.min.css" rel="stylesheet">
+    <!-- Owl Carousel -->
+    <link href="plugins/slick-carousel/slick/slick.css" rel="stylesheet">
+    <link href="plugins/slick-carousel/slick/slick-theme.css" rel="stylesheet">
+    <!-- Fancy Box -->
+    <link href="plugins/fancybox/jquery.fancybox.pack.css" rel="stylesheet">
+    <link href="plugins/jquery-nice-select/css/nice-select.css" rel="stylesheet">
+    <link href="plugins/seiyria-bootstrap-slider/dist/css/bootstrap-slider.min.css" rel="stylesheet">
+    <!-- CUSTOM CSS -->
+    <link href="css/style.css" rel="stylesheet">
+
+    <script src="vendor/jquery.min.js"></script>
+    <script src="plugins/tether/js/tether.min.js"></script>
+    <script src="plugins/bootstrap/dist/js/popper.min.js"></script>
+    <script src="plugins/bootstrap/dist/js/bootstrap.min.js"></script>
+    <script src="plugins/seiyria-bootstrap-slider/dist/bootstrap-slider.min.js"></script>
+    <script src="plugins/slick-carousel/slick/slick.min.js"></script>
+    <script src="plugins/jquery-nice-select/js/jquery.nice-select.min.js"></script>
+    <script src="plugins/fancybox/jquery.fancybox.pack.js"></script>
+    <script src="js/scripts.js"></script>
+
+    <link rel="stylesheet" href="./vendor/element-ui/lib/theme-chalk/index.css">
+    <link rel="stylesheet" href="./css/common.css">
+    <script type="application/javascript" src="./vendor/vue/vue.js"></script>
+    <script type="application/javascript" src="./vendor/vue/vue-resource.js"></script>
+    <script type="application/javascript" src="./vendor/element-ui/lib/index.js"></script>
+    <script type="application/javascript" src="./js/common.js"></script>
+    <script type="application/javascript" src="./js/components.js"></script>
+</head>
+
+<body class="body-wrapper">
+<div id="app" v-cloak>
+    <nav-header page="user-goods"></nav-header>
+    <section class="dashboard section">
+        <div class="container">
+            <div class="row">
+                <user-sidebar page="user-goods"></user-sidebar>
+                <div class="col-md-10 offset-md-1 col-lg-8 offset-lg-0">
+                    <div class="widget dashboard-container my-adslist">
+                        <div class="widget-header">
+                            我的商品
+                            <el-button type="primary" style="float: right" @click="onClickCreateGoods">发布商品</el-button>
+                        </div>
+                        <table class="table product-dashboard-table">
+                            <thead>
+                            <tr>
+                                <th>图片</th>
+                                <th>商品</th>
+                                <th class="text-center">类别</th>
+                                <th class="text-center">操作</th>
+                            </tr>
+                            </thead>
+                            <tbody>
+                            <tr v-for="goods in goodsList">
+                                <td class="product-thumb">
+                                    <img width="80px" height="auto" :src="goods.pic_url">
+                                </td>
+                                <td class="product-details">
+                                    <h3 class="title">{{goods.title}}</h3>
+                                    <span class="add-id"><strong>价格：</strong>{{goods.price}}</span>
+                                    <span class="status" :class="{active:goods.status===1}"><strong>状态：</strong>{{getStatusText(goods.status)}}</span>
+                                    <span class="status"><strong>销售状态：</strong>{{goods.sell_status|sellStatus}}</span>
+                                    <span><strong>发布日期: </strong><time>{{goods.created_at}}</time> </span>
+                                </td>
+                                <td class="product-category">
+                                    <span class="categories">{{goods.full_category_name}}</span>
+                                </td>
+                                <td class="action" data-title="Action">
+                                    <div class="">
+                                        <ul class="list-inline justify-content-center">
+                                            <li class="list-inline-item">
+                                                <a class="edit" :href="getEditUrl(goods)">
+                                                    <i class="fa fa-clipboard"></i>
+                                                </a>
+                                            </li>
+                                            <li class="list-inline-item">
+                                                <el-popover
+                                                        placement="right"
+                                                        width="160"
+                                                        v-model="goods.deleteVisible">
+                                                    <p style="text-align: center">确定删除此商品吗？</p>
+                                                    <div style="text-align: right; margin-top: 10px">
+                                                        <el-button size="mini" type="text"
+                                                                   @click="goods.deleteVisible = false">
+                                                            取消
+                                                        </el-button>
+                                                        <el-button type="danger" size="mini"
+                                                                   @click="onClickDeleteGoods(goods)">
+                                                            删除
+                                                        </el-button>
+                                                    </div>
+                                                    <a slot="reference" class="delete" href="javascript:;">
+                                                        <i class="fa fa-trash"></i>
+                                                    </a>
+                                                </el-popover>
+                                            </li>
+                                        </ul>
+                                    </div>
+                                </td>
+                            </tr>
+                            </tbody>
+                        </table>
+                        <el-pagination background layout="prev, pager, next"
+                                       :page-size="goodsPagination.page_size" :total="goodsPagination.total"
+                                       :current-page.sync="goodsPagination.page_index"
+                                       @current-change="onPageChange">
+                        </el-pagination>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+    <page-footer></page-footer>
+</div>
+</body>
+<script>
+    let vueApp = new Vue({
+        el: '#app',
+        data: function () {
+            return {
+                goodsPagination: {
+                    page_index: 1,
+                    page_size: 5,
+                    total: 0
+                },
+                goodsList: []
+            }
+        },
+        filters:{
+            sellStatus(status){
+                return ['', '可购买', '交易中', '已售出'][status];
+            }
+        },
+        methods: {
+            onClickCreateGoods: function () {
+                _relocation('goods-edit.html');
+            },
+            onPageChange: function () {
+                this.getGoods();
+            },
+            getStatusText(status) {
+                if (status === 0) {
+                    return '隐藏';
+                }
+                return '公开';
+            },
+            getEditUrl(goods) {
+                return 'goods-edit.html?id=' + goods.id;
+            },
+            getGoods() {
+                let self = this;
+                _api('get', 'goods/mine', this.goodsPagination, function (res) {
+                    if (res.success) {
+                        self.goodsPagination.page_index = res.data.page_index;
+                        self.goodsPagination.total = res.data.total;
+                        self.goodsList = res.data.list.map(function (item) {
+                            item.deleteVisible = false;
+                            return item;
+                        });
+                    } else {
+                        self.$message.error(res.message);
+                    }
+                })
+            },
+            onClickDeleteGoods(goods) {
+                let self = this;
+                goods.deleteVisible = false
+                _api('delete', 'goods', {id: goods.id}, function (res) {
+                    if (res.success) {
+                        self.$message.success('商品已删除');
+                        self.getGoods();
+                    } else {
+                        self.$message.error(res.message);
+                    }
+                })
+            }
+        },
+        mounted: function () {
+            this.getGoods();
+        }
+    });
+</script>
+</html>

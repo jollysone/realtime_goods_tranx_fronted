@@ -1,0 +1,148 @@
+<!DOCTYPE html>
+<html lang="ch">
+<head>
+
+    <!-- SITE TITTLE -->
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>智慧校园二手物品交易网站</title>
+
+    <!-- Bootstrap -->
+    <link href="plugins/bootstrap/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Font Awesome -->
+    <link href="plugins/font-awesome/css/font-awesome.min.css" rel="stylesheet">
+    <!-- Owl Carousel -->
+    <link href="plugins/slick-carousel/slick/slick.css" rel="stylesheet">
+    <link href="plugins/slick-carousel/slick/slick-theme.css" rel="stylesheet">
+    <!-- Fancy Box -->
+    <link href="plugins/fancybox/jquery.fancybox.pack.css" rel="stylesheet">
+    <link href="plugins/jquery-nice-select/css/nice-select.css" rel="stylesheet">
+    <link href="plugins/seiyria-bootstrap-slider/dist/css/bootstrap-slider.min.css" rel="stylesheet">
+    <!-- CUSTOM CSS -->
+    <link href="css/style.css" rel="stylesheet">
+
+    <script src="vendor/jquery.min.js"></script>
+    <script src="plugins/tether/js/tether.min.js"></script>
+    <script src="plugins/bootstrap/dist/js/popper.min.js"></script>
+    <script src="plugins/bootstrap/dist/js/bootstrap.min.js"></script>
+    <script src="plugins/seiyria-bootstrap-slider/dist/bootstrap-slider.min.js"></script>
+    <script src="plugins/slick-carousel/slick/slick.min.js"></script>
+    <script src="plugins/jquery-nice-select/js/jquery.nice-select.min.js"></script>
+    <script src="plugins/fancybox/jquery.fancybox.pack.js"></script>
+    <script src="js/scripts.js"></script>
+
+    <link rel="stylesheet" href="./vendor/element-ui/lib/theme-chalk/index.css">
+    <link rel="stylesheet" href="./css/common.css">
+    <script type="application/javascript" src="./vendor/vue/vue.js"></script>
+    <script type="application/javascript" src="./vendor/vue/vue-resource.js"></script>
+    <script type="application/javascript" src="./vendor/element-ui/lib/index.js"></script>
+    <script type="application/javascript" src="./js/common.js"></script>
+    <script type="application/javascript" src="./js/components.js"></script>
+</head>
+
+<body class="body-wrapper">
+<div id="app" v-cloak>
+    <nav-header page="user-orders"></nav-header>
+    <section class="dashboard section">
+        <div class="container">
+            <div class="row">
+                <user-sidebar page="user-orders"></user-sidebar>
+                <div class="col-md-10 offset-md-1 col-lg-8 offset-lg-0">
+                    <div class="widget dashboard-container my-adslist">
+                        <h3 class="widget-header">我的买入订单</h3>
+                        <table class="table product-dashboard-table">
+                            <thead>
+                            <tr>
+                                <th>图片</th>
+                                <th>详情</th>
+                                <th class="text-center">价格</th>
+                                <th class="text-center">操作</th>
+                            </tr>
+                            </thead>
+                            <tbody>
+                            <tr v-for="order in orders">
+                                <td class="product-thumb">
+                                    <img width="80px" height="auto" :src="order.goods.pic_url">
+                                </td>
+                                <td class="product-details">
+                                    <h3 class="title">{{order.goods.title}}</h3>
+                                    <span><strong>卖家: </strong><time>{{order.seller.nick}} ({{order.seller.phone}})</time> </span>
+                                    <span><strong>下单日期: </strong><time>{{order.created_at}}</time> </span>
+                                    <span><strong>状态: </strong><time>{{order.status|orderStatus}}</time> </span>
+                                </td>
+                                <td class="product-category">
+                                    <span class="categories">{{order.price}}</span>
+                                </td>
+                                <td class="action" data-title="Action">
+                                    <div class="">
+                                        <ul class="list-inline justify-content-center">
+                                            <li class="list-inline-item">
+                                                <a class="edit" :href="getOrderDetailUrl(order)">
+                                                    <i class="fa fa-eye"></i>
+                                                </a>
+                                            </li>
+                                        </ul>
+                                    </div>
+                                </td>
+                            </tr>
+                            </tbody>
+                        </table>
+                        <el-pagination background layout="prev, pager, next"
+                                       :page-size="ordersPagination.page_size" :total="ordersPagination.total"
+                                       :current-page.sync="ordersPagination.page_index"
+                                       @current-change="onPageChange">
+                        </el-pagination>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+    <page-footer></page-footer>
+</div>
+</body>
+<script>
+    let vueApp = new Vue({
+        el: '#app',
+        data: function () {
+            return {
+                ordersPagination: {
+                    page_index: 1,
+                    page_size: 5,
+                    total: 0
+                },
+                orders: []
+            }
+        },
+        filters: {
+            orderStatus(status) {
+                return ['', '等待线下确认', '完成', '已取消', '超时未确认'][status];
+            }
+        },
+        methods: {
+            onPageChange() {
+                this.getOrders();
+            },
+            getOrderDetailUrl(order) {
+                return 'order-detail.html?sn=' + order.sn;
+            },
+            getOrders() {
+                let self = this;
+                _api('get', 'orders', this.ordersPagination, function (res) {
+                    if (res.success) {
+                        self.ordersPagination.page_index = res.data.page_index;
+                        self.ordersPagination.total = res.data.total;
+
+                        self.orders = res.data.list;
+                    } else {
+                        self.$message.error(res.message);
+                    }
+                })
+            }
+        },
+        mounted: function () {
+            this.getOrders();
+        }
+    });
+</script>
+</html>

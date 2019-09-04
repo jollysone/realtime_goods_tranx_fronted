@@ -1,0 +1,188 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+    <!-- SITE TITTLE -->
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>智慧校园二手物品交易网站</title>
+
+    <!-- Bootstrap -->
+    <link href="plugins/bootstrap/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Font Awesome -->
+    <link href="plugins/font-awesome/css/font-awesome.min.css" rel="stylesheet">
+    <!-- Owl Carousel -->
+    <link href="plugins/slick-carousel/slick/slick.css" rel="stylesheet">
+    <link href="plugins/slick-carousel/slick/slick-theme.css" rel="stylesheet">
+    <!-- Fancy Box -->
+    <link href="plugins/fancybox/jquery.fancybox.pack.css" rel="stylesheet">
+    <link href="plugins/jquery-nice-select/css/nice-select.css" rel="stylesheet">
+    <link href="plugins/seiyria-bootstrap-slider/dist/css/bootstrap-slider.min.css" rel="stylesheet">
+    <!-- CUSTOM CSS -->
+    <link href="css/style.css" rel="stylesheet">
+
+    <script src="vendor/jquery.min.js"></script>
+    <script src="plugins/tether/js/tether.min.js"></script>
+    <script src="plugins/bootstrap/dist/js/popper.min.js"></script>
+    <script src="plugins/bootstrap/dist/js/bootstrap.min.js"></script>
+    <script src="plugins/seiyria-bootstrap-slider/dist/bootstrap-slider.min.js"></script>
+    <script src="plugins/slick-carousel/slick/slick.min.js"></script>
+    <script src="plugins/jquery-nice-select/js/jquery.nice-select.min.js"></script>
+    <script src="plugins/fancybox/jquery.fancybox.pack.js"></script>
+    <script src="js/scripts.js"></script>
+
+    <link rel="stylesheet" href="./vendor/element-ui/lib/theme-chalk/index.css">
+    <link rel="stylesheet" href="./css/common.css">
+    <script type="application/javascript" src="./vendor/vue/vue.js"></script>
+    <script type="application/javascript" src="./vendor/vue/vue-resource.js"></script>
+    <script type="application/javascript" src="./vendor/element-ui/lib/index.js"></script>
+    <script type="application/javascript" src="./js/common.js"></script>
+    <script type="application/javascript" src="./js/components.js"></script>
+    <style>
+        .captcha {
+            cursor: pointer;
+            margin-left: 20px;
+        }
+    </style>
+</head>
+
+<body class="body-wrapper">
+<div id="app" v-cloak>
+    <nav-header page="register"></nav-header>
+    <section class="user-profile section">
+        <div class="container">
+            <div class="row">
+                <div class="col-md-8 el-col-md-offset-4">
+                    <div class="widget change-email mb-0">
+                        <h3 class="widget-header user">重设密码</h3>
+                        <el-form :model="retrieveForm" status-icon :rules="rules" ref="retrieveForm" label-width="80px">
+                            <el-form-item label="学号" prop="number">
+                                <el-input type="text" v-model="retrieveForm.number"
+                                          placeholder="请输入学号"></el-input>
+                            </el-form-item>
+                            <el-form-item label="手机号" prop="phone">
+                                <el-input type="text" v-model="retrieveForm.phone"
+                                          placeholder="请输入账号"></el-input>
+                            </el-form-item>
+                            <el-form-item label="真实姓名" prop="true_name">
+                                <el-input type="text" v-model="retrieveForm.true_name"
+                                          placeholder="请输入真实姓名"></el-input>
+                            </el-form-item>
+                            <el-form-item label="新密码" prop="password">
+                                <el-input type="password" v-model="retrieveForm.password" autocomplete="new-password"
+                                          placeholder="请输入新密码"></el-input>
+                            </el-form-item>
+                            <el-form-item label="确认密码" prop="password_repeat">
+                                <el-input type="password" v-model="retrieveForm.password_repeat"
+                                          placeholder="请输入密码"></el-input>
+                            </el-form-item>
+                            <el-form-item label="验证码" prop="captcha">
+                                <el-col :span="18">
+                                    <el-input type="text" v-model="retrieveForm.captcha"
+                                              placeholder="请输入验证码"></el-input>
+                                </el-col>
+                                <img class="captcha" :src="captcha.img" @click="getCaptcha">
+                            </el-form-item>
+                            <el-form-item>
+                                <el-button type="primary" @click="onClickRetrieve">重设密码</el-button>
+                            </el-form-item>
+                        </el-form>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+    <page-footer></page-footer>
+</div>
+</body>
+<script type="application/javascript">
+    let vueApp = null;
+    vueApp = new Vue({
+        el: '#app',
+        data: function () {
+            return {
+                captcha: {
+                    img: '',
+                    key: ''
+                },
+                retrieveForm: {
+                    number: '',
+                    phone: '',
+                    true_name: '',
+                    password: '',
+                    password_repeat: '',
+                    captcha: '',
+                },
+                rules: {
+                    number: [
+                        {required: true, message: '请输入学号', trigger: 'blur'},
+                    ],
+                    phone: [
+                        {required: true, message: '请输入账号', trigger: 'blur'},
+                    ],
+                    true_name: [
+                        {required: true, message: '请输入真实姓名', trigger: 'blur'},
+                    ],
+                    password: [{
+                        validator: (rule, value, callback) => {
+                            if (value !== '' && value.length < 6) {
+                                callback(new Error('新密码至少6个字符'));
+                            }
+                            vueApp.$refs.retrieveForm.validateField('password_repeat');
+                            callback();
+                        }, trigger: 'change'
+                    }],
+                    password_repeat: [{
+                        validator: (rule, value, callback) => {
+                            if (vueApp.retrieveForm.password) {
+                                if (value.length === 0) {
+                                    callback(new Error('请重复输入密码'));
+                                } else if (value !== vueApp.retrieveForm.password) {
+                                    callback(new Error('两次输入的密码不一致'));
+                                }
+                                callback();
+                            }
+                            callback();
+                        }, trigger: 'change'
+                    }],
+                    captcha: [
+                        {required: true, message: '请输入验证码', trigger: 'blur'},
+                    ],
+                }
+            }
+        },
+        methods: {
+            getCaptcha() {
+                let self = this;
+                _api('patch', 'captcha', {}, function (res) {
+                    if (res.success) {
+                        self.captcha = res.data;
+                    }
+                })
+            },
+            onClickRetrieve() {
+                let self = this;
+                this.$refs['retrieveForm'].validate((valid) => {
+                    if (valid) {
+                        this.retrieveForm.captcha_key = this.captcha.key;
+                        _api('put', 'user/password/by-retrieve', this.retrieveForm, function (res) {
+                            if (res.success) {
+                                self.$message.success('密码重设成功');
+                                setTimeout(function () {
+                                    _relocation('login.html');
+                                }, 1000);
+                            } else {
+                                self.$message.error(res.message);
+                                self.getCaptcha();
+                            }
+                        });
+                    }
+                });
+            }
+        },
+        mounted: function () {
+            this.getCaptcha();
+        }
+    });
+</script>
+</html>

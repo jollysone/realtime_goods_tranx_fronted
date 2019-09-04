@@ -1,0 +1,25 @@
+[v-cloak] {
+    display: none !important;
+}
+
+html {
+    height: 100%;
+}
+
+body {
+    height: 100%;
+    margin: 0;
+    font-family: "微软雅黑";
+}
+
+p {
+    margin: 0;
+}
+
+.clear-float:after {
+    content: ".";
+    display: block;
+    height: 0;
+    visibility: hidden;
+    clear: both;
+}

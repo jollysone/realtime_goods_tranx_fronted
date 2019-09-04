@@ -1,0 +1,247 @@
+<!DOCTYPE html>
+<html lang="ch">
+<head>
+
+    <!-- SITE TITTLE -->
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>智慧校园二手物品交易网站</title>
+
+    <!-- Bootstrap -->
+    <link href="plugins/bootstrap/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Font Awesome -->
+    <link href="plugins/font-awesome/css/font-awesome.min.css" rel="stylesheet">
+    <!-- Owl Carousel -->
+    <link href="plugins/slick-carousel/slick/slick.css" rel="stylesheet">
+    <link href="plugins/slick-carousel/slick/slick-theme.css" rel="stylesheet">
+    <!-- Fancy Box -->
+    <link href="plugins/fancybox/jquery.fancybox.pack.css" rel="stylesheet">
+    <link href="plugins/jquery-nice-select/css/nice-select.css" rel="stylesheet">
+    <link href="plugins/seiyria-bootstrap-slider/dist/css/bootstrap-slider.min.css" rel="stylesheet">
+    <!-- CUSTOM CSS -->
+    <link href="css/style.css" rel="stylesheet">
+
+    <script src="vendor/jquery.min.js"></script>
+    <script src="plugins/tether/js/tether.min.js"></script>
+    <script src="plugins/bootstrap/dist/js/popper.min.js"></script>
+    <script src="plugins/bootstrap/dist/js/bootstrap.min.js"></script>
+    <script src="plugins/seiyria-bootstrap-slider/dist/bootstrap-slider.min.js"></script>
+    <script src="plugins/slick-carousel/slick/slick.min.js"></script>
+    <script src="plugins/jquery-nice-select/js/jquery.nice-select.min.js"></script>
+    <script src="plugins/fancybox/jquery.fancybox.pack.js"></script>
+    <script src="js/scripts.js"></script>
+
+    <link rel="stylesheet" href="./vendor/element-ui/lib/theme-chalk/index.css">
+    <link rel="stylesheet" href="./css/common.css">
+    <script type="application/javascript" src="./vendor/vue/vue.js"></script>
+    <script type="application/javascript" src="./vendor/vue/vue-resource.js"></script>
+    <script type="application/javascript" src="./vendor/element-ui/lib/index.js"></script>
+    <script type="application/javascript" src="./js/common.js"></script>
+    <script type="application/javascript" src="./js/components.js"></script>
+    <style>
+        .sub-category {
+            margin-left: 20px;
+        }
+
+        .sub-category a {
+            color: #666;
+        }
+
+        .sub-category-active {
+            color: #007bff !important;
+        }
+
+        .card-title {
+            overflow: hidden;
+            text-overflow: ellipsis;
+            display: -webkit-box;
+            -webkit-line-clamp: 2;
+            -webkit-box-orient: vertical;
+            height: 43px;
+        }
+    </style>
+</head>
+
+<body class="body-wrapper">
+<div id="app" v-cloak>
+    <nav-header page="list"></nav-header>
+    <section class="page-search">
+        <div class="container">
+            <div class="row">
+                <div class="col-md-12">
+                    <div class="advance-search">
+                        <div class="form-row">
+                            <div class="form-group col-md-10">
+                                <input type="text" class="form-control" v-model="keywords"
+                                       placeholder="在找什么？">
+                            </div>
+                            <div class="form-group col-md-2">
+                                <button class="btn" @click="getGoods()" style="width: 100%"> 搜索</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+    <section class="section-sm">
+        <div class="container">
+            <div v-if="filters.keywords.length" class="row">
+                <div class="col-md-12">
+                    <div class="search-result bg-gray">
+                        <h2>以下是 "{{filters.keywords}}" 的搜索结果</h2>
+                        <p>共 {{goodsPagination.total}} 个商品</p>
+                    </div>
+                </div>
+            </div>
+            <div class="row">
+                <div class="col-md-3">
+                    <div class="category-sidebar">
+                        <div class="widget category-list">
+                            <h4 class="widget-header">所有类别</h4>
+                            <ul class="category-list">
+                                <template v-for="category in categoryOptions">
+                                    <li>
+                                        <a href="javascript:;" @click="onClickExpandCategory(category)">
+                                            {{category.name}} <span>{{category.amount}}</span>
+                                        </a>
+                                    </li>
+                                    <li v-if="category.expanded" v-for="sub in category.children" class="sub-category">
+                                        <a href="javascript:;" @click="onClickSubCategory(sub)"
+                                           :class="{'sub-category-active':filters.category_id === sub.id}">
+                                            {{sub.name}} <span>{{sub.amount}}</span>
+                                        </a>
+                                    </li>
+                                </template>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-9">
+                    <div class="product-grid-list">
+                        <div class="row mb-30">
+                            <div v-for="goods in goodsList" class="col-sm-12 col-lg-4 col-md-6">
+                                <div class="product-item bg-light">
+                                    <div class="card">
+                                        <div class="thumb-content">
+                                            <a :href="getGoodsDetailUrl(goods)">
+                                                <img class="card-img-top img-fluid" :src="goods.pic_url">
+                                            </a>
+                                        </div>
+                                        <div class="card-body">
+                                            <h4 class="card-title">
+                                                <a :href="getGoodsDetailUrl(goods)">{{goods.title}}</a>
+                                            </h4>
+                                            <h5>
+                                                <a :href="getGoodsDetailUrl(goods)">¥ {{goods.price}}</a>
+                                            </h5>
+                                            <ul class="list-inline product-meta">
+                                                <li class="list-inline-item">
+                                                    <a :href="getGoodsDetailUrl(goods)"><i
+                                                            class="fa fa-folder-open-o"></i>{{goods.full_category_name}}</a>
+                                                </li>
+                                                <li class="list-inline-item">
+                                                    <a :href="getGoodsDetailUrl(goods)"><i class="fa fa-calendar"></i>{{goods.created_at}}</a>
+                                                </li>
+                                            </ul>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="pagination justify-content-center">
+                        <el-pagination background layout="prev, pager, next"
+                                       :page-size="goodsPagination.page_size" :total="goodsPagination.total"
+                                       :current-page.sync="goodsPagination.page_index"
+                                       @current-change="onPageChange">
+                        </el-pagination>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+    <page-footer></page-footer>
+</div>
+</body>
+<script>
+    let vueApp = new Vue({
+        el: '#app',
+        data: function () {
+            return {
+                keywords: '',
+                filters: {
+                    keywords: '',
+                    category_id: ''
+                },
+                goodsPagination: {
+                    page_index: 1,
+                    page_size: 5,
+                    total: 0
+                },
+                goodsList: [],
+                categoryOptions: [],
+            }
+        },
+        methods: {
+            getCategories() {
+                let self = this;
+                _api('get', 'categories/all', {}, function (res) {
+                    if (res.success) {
+                        let c1 = _getUrlParam('c1', '');
+
+                        self.categoryOptions = res.data.map(function (item) {
+                            item.expanded = item.id === c1;
+                            return item;
+                        });
+                    }
+                })
+            },
+            onClickSubCategory(category) {
+                if (this.filters.category_id === category.id) {
+                    this.filters.category_id = '';
+                } else {
+                    this.filters.category_id = category.id;
+                }
+                this.getGoods();
+            },
+            onClickExpandCategory(category) {
+                for (let i = 0; i < this.categoryOptions.length; i++) {
+                    this.categoryOptions[i].expanded = false;
+                }
+                category.expanded = true;
+            },
+            onPageChange: function () {
+                this.getGoods();
+            },
+            getGoods() {
+                let self = this;
+                this.filters.keywords = this.keywords;
+                _api('get', 'goods/many', {...this.goodsPagination, ...this.filters}, function (res) {
+                    if (res.success) {
+                        self.goodsPagination.page_index = res.data.page_index;
+                        self.goodsPagination.total = res.data.total;
+                        self.goodsList = res.data.list.map(function (item) {
+                            item.deleteVisible = false;
+                            return item;
+                        });
+                    } else {
+                        self.$message.error(res.message);
+                    }
+                })
+            },
+            getGoodsDetailUrl(goods) {
+                return 'goods-detail.html?id=' + goods.id;
+            }
+        },
+        mounted: function () {
+            this.filters.category_id = _getUrlParam('c2', '');
+            this.keywords = _getUrlParam('keywords', '');
+
+            this.getCategories();
+            this.getGoods();
+        }
+    });
+</script>
+</html>

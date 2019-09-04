@@ -1,0 +1,285 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+
+    <!-- SITE TITTLE -->
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>智慧校园二手物品交易网站</title>
+
+    <!-- Bootstrap -->
+    <link href="plugins/bootstrap/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Font Awesome -->
+    <link href="plugins/font-awesome/css/font-awesome.min.css" rel="stylesheet">
+    <!-- Owl Carousel -->
+    <link href="plugins/slick-carousel/slick/slick.css" rel="stylesheet">
+    <link href="plugins/slick-carousel/slick/slick-theme.css" rel="stylesheet">
+    <!-- Fancy Box -->
+    <link href="plugins/fancybox/jquery.fancybox.pack.css" rel="stylesheet">
+    <link href="plugins/jquery-nice-select/css/nice-select.css" rel="stylesheet">
+    <link href="plugins/seiyria-bootstrap-slider/dist/css/bootstrap-slider.min.css" rel="stylesheet">
+    <!-- CUSTOM CSS -->
+    <link href="css/style.css" rel="stylesheet">
+
+    <script src="vendor/jquery.min.js"></script>
+    <script src="plugins/tether/js/tether.min.js"></script>
+    <script src="plugins/bootstrap/dist/js/popper.min.js"></script>
+    <script src="plugins/bootstrap/dist/js/bootstrap.min.js"></script>
+    <script src="plugins/seiyria-bootstrap-slider/dist/bootstrap-slider.min.js"></script>
+    <script src="plugins/slick-carousel/slick/slick.min.js"></script>
+    <script src="plugins/jquery-nice-select/js/jquery.nice-select.min.js"></script>
+    <script src="plugins/fancybox/jquery.fancybox.pack.js"></script>
+    <script src="js/scripts.js"></script>
+
+    <link rel="stylesheet" href="./vendor/element-ui/lib/theme-chalk/index.css">
+    <link rel="stylesheet" href="./css/common.css">
+    <script type="application/javascript" src="./vendor/vue/vue.js"></script>
+    <script type="application/javascript" src="./vendor/vue/vue-resource.js"></script>
+    <script type="application/javascript" src="./vendor/element-ui/lib/index.js"></script>
+    <script type="application/javascript" src="./js/common.js"></script>
+    <script type="application/javascript" src="./js/components.js"></script>
+    <style>
+        .goods-description-container img {
+            width: 100%;
+        }
+
+        .widget.unavailable {
+            background: #999;
+            cursor: not-allowed;
+        }
+
+        .recommend-container img {
+            width: 50px;
+            float: left;
+        }
+
+        .recommend-right {
+            float: left;
+            margin-left: 10px;
+        }
+
+        .recommend-right p {
+            line-height: 25px;
+        }
+
+        .r-goods-title {
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+            color: #000;
+            font-weight: bold;
+        }
+    </style>
+</head>
+
+<body class="body-wrapper">
+<div id="app" v-cloak>
+    <nav-header page="goods-detail"></nav-header>
+    <section class="section bg-gray">
+        <div class="container">
+            <div class="row">
+                <div class="col-md-8">
+                    <div class="product-details">
+                        <h1 class="product-title">{{goods.title}}</h1>
+                        <div class="product-meta">
+                            <ul class="list-inline">
+                                <li class="list-inline-item">
+                                    <i class="fa fa-folder-open-o"></i> 类别<a> {{goods.full_category_name}}</a>
+                                </li>
+                            </ul>
+                        </div>
+                        <div id="carouselExampleIndicators" class="product-slider carousel slide" data-ride="carousel">
+                            <ol class="carousel-indicators">
+                                <li data-target="#carouselExampleIndicators" data-slide-to="0" class="active"></li>
+                            </ol>
+                            <div class="carousel-inner">
+                                <div class="carousel-item active">
+                                    <img class="d-block w-100" :src="goods.pic_url">
+                                </div>
+                            </div>
+                        </div>
+                        <div class="content">
+                            <div class="tab-content" id="pills-tabContent">
+                                <div class="tab-pane fade show active" id="pills-home" role="tabpanel"
+                                     aria-labelledby="pills-home-tab">
+                                    <h3 class="tab-title">商品详情</h3>
+                                    <div class="goods-description-container" v-html="goods.description"></div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-4" style="margin-top: 100px">
+                    <div class="sidebar" v-if="goods.user">
+                        <a href="javascript:;" @click="onClickBuy">
+                            <div class="widget price text-center" :class="{'unavailable':!isGoodsAvailable}">
+                                <h4>{{goodsBuyActionText}}</h4>
+                                <p>¥ {{goods.price}}</p>
+                            </div>
+                        </a>
+                        <div class="widget disclaimer">
+                            <h5 class="widget-header">卖家信息</h5>
+                            <h6><a href="">账号昵称：{{goods.user.nick}}</a></h6>
+                            <h6><a href="">联系方式：{{goods.user.phone}}</a></h6>
+                            <h6><a href="">销售信用：{{goods.user.credit.sell_score}}</a></h6>
+                            <p class="member-time"> 注册时间：{{goods.user.created_at}}</p>
+                        </div>
+                        <div class="widget disclaimer">
+                            <h5 class="widget-header">推荐商品</h5>
+                            <div v-if="!currentUser.id" class="col-lg-12" style="text-align: center">
+                                <button class="btn btn-main" @click="onClickLogin">登录后查看</button>
+                            </div>
+                            <template v-if="currentUser.id">
+                                <div v-if="!recommendGoods.length" class="col-lg-12" style="text-align: center">
+                                    <p>多浏览一些商品，才有推荐哦</p>
+                                </div>
+                                <div v-for="goods in recommendGoods" class="recommend-container clear-float">
+                                    <a :href="getGoodsDetailUrl(goods)">
+                                        <img :src="goods.pic_url">
+                                        <div class="recommend-right">
+                                            <p class="r-goods-title">{{goods.title}}</p>
+                                            <p class="r-goods-price">{{goods.price}}</p>
+                                        </div>
+                                    </a>
+                                </div>
+                            </template>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+    <page-footer></page-footer>
+</div>
+</body>
+<script type="application/javascript">
+    let vueApp = new Vue({
+        el: '#app',
+        data: function () {
+            return {
+                currentUser: {},
+                goods: {},
+                recommendGoods: {},
+                browseLogId: '',
+            }
+        },
+        computed: {
+            isGoodsAvailable() {
+                return this.goods.user.id !== this.currentUser.id && this.goods.status === 1 && this.goods.sell_status === 1;
+            },
+            goodsBuyActionText() {
+                if (this.goods.user.id === this.currentUser.id) {
+                    return '无法购买自己的商品';
+                } else if (this.goods.status !== 1) {
+                    return '商品已下线';
+                } else if (this.goods.sell_status === 2) {
+                    return '商品交易中'
+                } else if (this.goods.sell_status === 3) {
+                    return '商品已售出'
+                }
+                return '立即购买';
+            }
+        },
+        methods: {
+            createBrowseLog() {
+                if (this.currentUser.id) {
+                    let params = {
+                        goods_id: this.goods.id,
+                        source: document.referrer
+                    };
+                    let self = this;
+                    _api('post', 'browse-log', params, function (res) {
+                        if (res.success) {
+                            self.browseLogId = res.data.id;
+
+                            setInterval(function () {
+                                self.updateBrowseLog();
+                            }, 10 * 1000);
+                        }
+                    })
+                }
+            },
+            updateBrowseLog() {
+                if (this.browseLogId) {
+                    _api('put', 'browse-log', {id: this.browseLogId}, function (res) {
+                    });
+                }
+            },
+            getRecommendGoods() {
+                if (!this.currentUser.id) {
+                    return;
+                }
+                let self = this;
+                let params = {
+                    exclude_goods_id: this.goods.id
+                };
+                _api('get', 'goods/recommend', params, function (res) {
+                    if (res.success) {
+                        self.recommendGoods = res.data;
+                    }
+                })
+            },
+            getGoodsDetail() {
+                let self = this;
+                _api('get', 'goods', {id: this.goods.id}, function (res) {
+                    if (res.success) {
+                        self.goods = res.data;
+                        if (self.goods.deleted_at) {
+                            self.$message.warning('商品已被删除，您正在查看快照信息');
+                        } else {
+                            self.createBrowseLog();
+                        }
+                        self.getRecommendGoods();
+                    } else {
+                        self.$message.error(res.message);
+                    }
+                })
+            },
+            getGoodsDetailUrl(goods) {
+                return 'goods-detail.html?id=' + goods.id;
+            },
+            onClickLogin() {
+                _relocation('login.html');
+            },
+            onClickBuy() {
+                let self = this;
+                if (!this.isGoodsAvailable) {
+                    return;
+                }
+                if (_getStorageStr('token')) {
+                    this.$confirm('确定购买此商品吗?', '提示', {
+                        confirmButtonText: '确定',
+                        cancelButtonText: '取消',
+                        type: 'warning'
+                    }).then(() => {
+                        _api('post', 'order', {goods_id: this.goods.id}, function (res) {
+                            if (res.success) {
+                                self.$message.success('下单成功');
+                                setTimeout(function () {
+                                    _relocation('user-orders.html');
+                                }, 1000);
+                            } else {
+                                self.$message.error(res.message);
+                            }
+                        })
+                    }).catch(() => {
+
+                    });
+                } else {
+                    _relocation('login.html');
+                }
+            }
+        },
+        mounted: function () {
+            this.goods.id = _getUrlParam('id', '');
+            this.currentUser = _getStorageObj('user', {});
+            this.getGoodsDetail();
+        }
+    });
+
+    window.onbeforeunload = function (e) {
+        vueApp.updateBrowseLog();
+    };
+</script>
+</html>
